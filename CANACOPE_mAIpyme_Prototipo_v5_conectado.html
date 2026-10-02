@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CANACOPE · mAIpyme — Prototipo</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172033;background:#f5f7fb}
+body{margin:0;background:#f5f7fb}.wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+header,.card{background:white;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.06);margin-bottom:18px}
+h1{margin:0 0 6px;font-size:28px}h2{font-size:19px;margin:8px 0 18px}.subtitle{margin:0 0 14px;color:#526070}
+.notice{background:#f0f5ff;padding:14px;border-radius:10px;line-height:1.5}
+fieldset{border:0;border-top:1px solid #e7ebf0;padding:20px 0 8px;margin:0}
+legend{font-weight:700;line-height:1.35;padding:0;max-width:100%}.meta{font-size:12px;color:#687585;margin:6px 0 10px}
+.option{display:block;padding:9px 10px;margin:5px 0;border:1px solid #e2e7ed;border-radius:9px;cursor:pointer;background:#fff}
+.option:hover{background:#f8fafc}.option input{margin-right:9px}
+input[type=text]{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #ccd4df;border-radius:9px;font-size:15px}
+button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}.primary{background:#1d4ed8;color:white}
+.secondary{background:#eef2f7;color:#243142;margin-left:8px}.actions{position:sticky;bottom:10px;background:rgba(255,255,255,.95);padding:12px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.error{display:none;color:#b42318;font-size:13px;margin-top:7px}.invalid .error{display:block}.counter{font-size:12px;color:#687585;margin-top:6px}
+.result{display:none}.metricgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.metric{background:#f6f8fb;border-radius:10px;padding:12px;text-align:center}.metric b{display:block;font-size:22px}
+.route{font-size:22px;font-weight:800;margin-bottom:8px}pre{white-space:pre-wrap;word-break:break-word;background:#101828;color:#eef2f6;padding:14px;border-radius:10px;max-height:340px;overflow:auto;font-size:12px}
+.small{font-size:12px;color:#667085}@media(max-width:700px){.metricgrid{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="wrap">
+<header><h1>CANACOPE · mAIpyme</h1><p class="subtitle">Prototipo de diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
+<div class="notice"><b>Duración:</b> aproximadamente 10 minutos.<br><b>Quién responde:</b> preferentemente dueño, socio, director o gerente general.<br>
+<b>Modo piloto:</b> calcula el Índice CANACOPE y una ruta provisional. Si se configura una URL de Google Apps Script, también guarda el registro en Google Sheets.</div></header>
+<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v4" novalidate>
+<section><h2>Perfil del negocio</h2>
+<fieldset data-question="q1" data-type="single">
+<legend>1. ¿Cuál es la principal actividad de tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q1" value="Comercio" required>Comercio</label>
+<label class="option"><input type="radio" name="q1" value="Servicios" required>Servicios</label>
+<label class="option"><input type="radio" name="q1" value="Alimentos y bebidas" required>Alimentos y bebidas</label>
+<label class="option"><input type="radio" name="q1" value="Manufactura / producción" required>Manufactura / producción</label>
+<label class="option"><input type="radio" name="q1" value="Construcción" required>Construcción</label>
+<label class="option"><input type="radio" name="q1" value="Transporte / logística" required>Transporte / logística</label>
+<label class="option"><input type="radio" name="q1" value="Turismo / hospedaje" required>Turismo / hospedaje</label>
+<label class="option"><input type="radio" name="q1" value="Salud" required>Salud</label>
+<label class="option"><input type="radio" name="q1" value="Educación / capacitación" required>Educación / capacitación</label>
+<label class="option"><input type="radio" name="q1" value="Tecnología / servicios digitales" required>Tecnología / servicios digitales</label>
+<label class="option"><input type="radio" name="q1" value="Otro" required>Otro</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q2" data-type="conditional-single"><legend>2. ¿Cuál es la subcategoría de tu actividad? *</legend><div class="meta">Tipo: selección única · depende de la actividad principal</div><div id="q2-options" class="options"></div><input type="hidden" name="q2" id="q2-value" required><div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q3" data-type="single">
+<legend>3. ¿Cuántas personas trabajan en tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q3" value="Solo yo" required>Solo yo</label>
+<label class="option"><input type="radio" name="q3" value="2–5" required>2–5</label>
+<label class="option"><input type="radio" name="q3" value="6–10" required>6–10</label>
+<label class="option"><input type="radio" name="q3" value="11–30" required>11–30</label>
+<label class="option"><input type="radio" name="q3" value="31–50" required>31–50</label>
+<label class="option"><input type="radio" name="q3" value="51–100" required>51–100</label>
+<label class="option"><input type="radio" name="q3" value="Más de 100" required>Más de 100</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q4" data-type="text">
+<legend>4. ¿En qué alcaldía se encuentra tu negocio? *</legend><div class="meta">Tipo: texto corto</div>
+<input type="text" name="q4" required placeholder="Escribe tu respuesta">
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q5" data-type="single">
+<legend>5. ¿Cuántos años lleva operando? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q5" value="Menos de 1" required>Menos de 1</label>
+<label class="option"><input type="radio" name="q5" value="1–3" required>1–3</label>
+<label class="option"><input type="radio" name="q5" value="4–10" required>4–10</label>
+<label class="option"><input type="radio" name="q5" value="11–20" required>11–20</label>
+<label class="option"><input type="radio" name="q5" value="Más de 20" required>Más de 20</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q6" data-type="single">
+<legend>6. ¿Cuántas sucursales tiene? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q6" value="Solo matriz" required>Solo matriz</label>
+<label class="option"><input type="radio" name="q6" value="2–3" required>2–3</label>
+<label class="option"><input type="radio" name="q6" value="4–10" required>4–10</label>
+<label class="option"><input type="radio" name="q6" value="Más de 10" required>Más de 10</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q7" data-type="single">
+<legend>7. ¿Cómo está organizado tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q7" value="Solo yo" required>Solo yo</label>
+<label class="option"><input type="radio" name="q7" value="Personal multifuncional" required>Personal multifuncional</label>
+<label class="option"><input type="radio" name="q7" value="Algunas áreas diferenciadas" required>Algunas áreas diferenciadas</label>
+<label class="option"><input type="radio" name="q7" value="Varias áreas claramente definidas" required>Varias áreas claramente definidas</label>
+<label class="option"><input type="radio" name="q7" value="Departamentos especializados" required>Departamentos especializados</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q8" data-type="single">
+<legend>8. ¿Cómo está compuesto tu equipo? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q8" value="Solo yo" required>Solo yo</label>
+<label class="option"><input type="radio" name="q8" value="Principalmente familia" required>Principalmente familia</label>
+<label class="option"><input type="radio" name="q8" value="Familia y empleados en proporciones similares" required>Familia y empleados en proporciones similares</label>
+<label class="option"><input type="radio" name="q8" value="Principalmente empleados" required>Principalmente empleados</label>
+<label class="option"><input type="radio" name="q8" value="Únicamente empleados contratados" required>Únicamente empleados contratados</label>
+<label class="option"><input type="radio" name="q8" value="Otro" required>Otro</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Digitalización y capacidad tecnológica</h2>
+<fieldset data-question="q9" data-type="single">
+<legend>9. ¿Qué tan digitalizado está tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q9" value="Muy poco — Casi todo se hace en papel o manualmente." required>Muy poco — Casi todo se hace en papel o manualmente.</label>
+<label class="option"><input type="radio" name="q9" value="Poco — Usamos algunas herramientas digitales, pero mucho sigue siendo manual." required>Poco — Usamos algunas herramientas digitales, pero mucho sigue siendo manual.</label>
+<label class="option"><input type="radio" name="q9" value="Medio — Parte de nuestros procesos y datos ya está en digital, pero combinamos con procesos manuales." required>Medio — Parte de nuestros procesos y datos ya está en digital, pero combinamos con procesos manuales.</label>
+<label class="option"><input type="radio" name="q9" value="Mucho — La mayoría de nuestros procesos y datos están digitalizados." required>Mucho — La mayoría de nuestros procesos y datos están digitalizados.</label>
+<label class="option"><input type="radio" name="q9" value="Completamente — Prácticamente toda nuestra operación e información está digitalizada." required>Completamente — Prácticamente toda nuestra operación e información está digitalizada.</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q10" data-type="multi" data-max-selections="10">
+<legend>10. ¿Qué dispositivos y recursos digitales utilizas? *</legend><div class="meta">Tipo: selección múltiple · máximo 10</div>
+<label class="option"><input type="checkbox" name="q10" value="Computadora de escritorio">Computadora de escritorio</label>
+<label class="option"><input type="checkbox" name="q10" value="Laptop">Laptop</label>
+<label class="option"><input type="checkbox" name="q10" value="Smartphone">Smartphone</label>
+<label class="option"><input type="checkbox" name="q10" value="Tablet">Tablet</label>
+<label class="option"><input type="checkbox" name="q10" value="Internet">Internet</label>
+<label class="option"><input type="checkbox" name="q10" value="Punto de venta / terminal">Punto de venta / terminal</label>
+<label class="option"><input type="checkbox" name="q10" value="Cámaras / dispositivos conectados">Cámaras / dispositivos conectados</label>
+<label class="option"><input type="checkbox" name="q10" value="Servidor / almacenamiento">Servidor / almacenamiento</label>
+<label class="option"><input type="checkbox" name="q10" value="Equipo especializado">Equipo especializado</label>
+<label class="option"><input type="checkbox" name="q10" value="Ninguno">Ninguno</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q11" data-type="multi" data-max-selections="14">
+<legend>11. ¿Qué sistemas o herramientas digitales utilizas? *</legend><div class="meta">Tipo: selección múltiple · máximo 14</div>
+<label class="option"><input type="checkbox" name="q11" value="WhatsApp / mensajería">WhatsApp / mensajería</label>
+<label class="option"><input type="checkbox" name="q11" value="Correo electrónico">Correo electrónico</label>
+<label class="option"><input type="checkbox" name="q11" value="Redes sociales">Redes sociales</label>
+<label class="option"><input type="checkbox" name="q11" value="Punto de venta">Punto de venta</label>
+<label class="option"><input type="checkbox" name="q11" value="Facturación electrónica">Facturación electrónica</label>
+<label class="option"><input type="checkbox" name="q11" value="Contabilidad / administración">Contabilidad / administración</label>
+<label class="option"><input type="checkbox" name="q11" value="Inventario">Inventario</label>
+<label class="option"><input type="checkbox" name="q11" value="CRM">CRM</label>
+<label class="option"><input type="checkbox" name="q11" value="Comercio electrónico">Comercio electrónico</label>
+<label class="option"><input type="checkbox" name="q11" value="Nómina / RH">Nómina / RH</label>
+<label class="option"><input type="checkbox" name="q11" value="Software sectorial">Software sectorial</label>
+<label class="option"><input type="checkbox" name="q11" value="Hojas de cálculo">Hojas de cálculo</label>
+<label class="option"><input type="checkbox" name="q11" value="Otro">Otro</label>
+<label class="option"><input type="checkbox" name="q11" value="Ninguno">Ninguno</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q12" data-type="single">
+<legend>12. ¿Qué capacidad tecnológica tiene tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q12" value="No tenemos conocimientos tecnológicos" required>No tenemos conocimientos tecnológicos</label>
+<label class="option"><input type="radio" name="q12" value="Normalmente necesitamos ayuda externa" required>Normalmente necesitamos ayuda externa</label>
+<label class="option"><input type="radio" name="q12" value="Podemos resolver problemas básicos" required>Podemos resolver problemas básicos</label>
+<label class="option"><input type="radio" name="q12" value="Podemos implementar algunas herramientas por nuestra cuenta" required>Podemos implementar algunas herramientas por nuestra cuenta</label>
+<label class="option"><input type="radio" name="q12" value="Contamos con personal tecnológico avanzado" required>Contamos con personal tecnológico avanzado</label>
+<label class="option"><input type="radio" name="q12" value="Contamos con personal tecnológico especializado" required>Contamos con personal tecnológico especializado</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Inteligencia Artificial actual</h2>
+<fieldset data-question="q13" data-type="single">
+<legend>13. ¿Qué tanto conoces sobre Inteligencia Artificial? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q13" value="Casi nada" required>Casi nada</label>
+<label class="option"><input type="radio" name="q13" value="He escuchado de ella, pero sé poco" required>He escuchado de ella, pero sé poco</label>
+<label class="option"><input type="radio" name="q13" value="Conozco algunos conceptos y herramientas" required>Conozco algunos conceptos y herramientas</label>
+<label class="option"><input type="radio" name="q13" value="Sé utilizar algunas herramientas de IA" required>Sé utilizar algunas herramientas de IA</label>
+<label class="option"><input type="radio" name="q13" value="Tengo buen conocimiento y conozco diferentes aplicaciones" required>Tengo buen conocimiento y conozco diferentes aplicaciones</label>
+<label class="option"><input type="radio" name="q13" value="Conocimiento avanzado / especializado" required>Conocimiento avanzado / especializado</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q14" data-type="single">
+<legend>14. Actualmente, ¿qué tanto utiliza tu negocio la IA? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q14" value="No la usamos" required>No la usamos</label>
+<label class="option"><input type="radio" name="q14" value="La hemos probado pero actualmente no" required>La hemos probado pero actualmente no</label>
+<label class="option"><input type="radio" name="q14" value="La usamos ocasionalmente en algunas actividades" required>La usamos ocasionalmente en algunas actividades</label>
+<label class="option"><input type="radio" name="q14" value="La usamos regularmente en algunas actividades" required>La usamos regularmente en algunas actividades</label>
+<label class="option"><input type="radio" name="q14" value="La IA ya forma parte de varias actividades" required>La IA ya forma parte de varias actividades</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q15" data-type="multi" data-max-selections="10">
+<legend>15. ¿En qué áreas de tu negocio se utiliza actualmente la IA? *</legend><div class="meta">Tipo: selección múltiple · máximo 10</div>
+<label class="option"><input type="checkbox" name="q15" value="Dirección / administración">Dirección / administración</label>
+<label class="option"><input type="checkbox" name="q15" value="Ventas">Ventas</label>
+<label class="option"><input type="checkbox" name="q15" value="Atención al cliente">Atención al cliente</label>
+<label class="option"><input type="checkbox" name="q15" value="Marketing / publicidad">Marketing / publicidad</label>
+<label class="option"><input type="checkbox" name="q15" value="Contabilidad / finanzas">Contabilidad / finanzas</label>
+<label class="option"><input type="checkbox" name="q15" value="Operaciones / producción">Operaciones / producción</label>
+<label class="option"><input type="checkbox" name="q15" value="Compras / inventario">Compras / inventario</label>
+<label class="option"><input type="checkbox" name="q15" value="Logística / reparto">Logística / reparto</label>
+<label class="option"><input type="checkbox" name="q15" value="RH">RH</label>
+<label class="option"><input type="checkbox" name="q15" value="Tecnología / sistemas">Tecnología / sistemas</label>
+<label class="option"><input type="checkbox" name="q15" value="Otro">Otro</label>
+<label class="option"><input type="checkbox" name="q15" value="No utilizamos IA">No utilizamos IA</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q16" data-type="single">
+<legend>16. ¿Con qué frecuencia se utiliza IA en tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q16" value="Nunca" required>Nunca</label>
+<label class="option"><input type="radio" name="q16" value="Menos de una vez al mes" required>Menos de una vez al mes</label>
+<label class="option"><input type="radio" name="q16" value="Algunas veces al mes" required>Algunas veces al mes</label>
+<label class="option"><input type="radio" name="q16" value="Algunas veces por semana" required>Algunas veces por semana</label>
+<label class="option"><input type="radio" name="q16" value="Todos o casi todos los días" required>Todos o casi todos los días</label>
+<label class="option"><input type="radio" name="q16" value="Varias veces al día" required>Varias veces al día</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q17" data-type="multi" data-max-selections="15">
+<legend>17. ¿Para qué actividades utilizas actualmente IA? *</legend><div class="meta">Tipo: selección múltiple · máximo 15</div>
+<label class="option"><input type="checkbox" name="q17" value="Textos">Textos</label>
+<label class="option"><input type="checkbox" name="q17" value="Imágenes">Imágenes</label>
+<label class="option"><input type="checkbox" name="q17" value="Video">Video</label>
+<label class="option"><input type="checkbox" name="q17" value="Análisis de datos">Análisis de datos</label>
+<label class="option"><input type="checkbox" name="q17" value="Investigación">Investigación</label>
+<label class="option"><input type="checkbox" name="q17" value="Comunicación con clientes">Comunicación con clientes</label>
+<label class="option"><input type="checkbox" name="q17" value="Marketing / redes">Marketing / redes</label>
+<label class="option"><input type="checkbox" name="q17" value="Ventas">Ventas</label>
+<label class="option"><input type="checkbox" name="q17" value="Administración">Administración</label>
+<label class="option"><input type="checkbox" name="q17" value="Contabilidad / finanzas">Contabilidad / finanzas</label>
+<label class="option"><input type="checkbox" name="q17" value="Inventario / operaciones">Inventario / operaciones</label>
+<label class="option"><input type="checkbox" name="q17" value="Automatización de tareas">Automatización de tareas</label>
+<label class="option"><input type="checkbox" name="q17" value="Documentos">Documentos</label>
+<label class="option"><input type="checkbox" name="q17" value="Programación">Programación</label>
+<label class="option"><input type="checkbox" name="q17" value="Otro">Otro</label>
+<label class="option"><input type="checkbox" name="q17" value="No utilizamos IA">No utilizamos IA</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q18" data-type="single">
+<legend>18. ¿Cómo se utiliza actualmente la IA en tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q18" value="Solo pruebas" required>Solo pruebas</label>
+<label class="option"><input type="radio" name="q18" value="Apoyo ocasional en tareas individuales" required>Apoyo ocasional en tareas individuales</label>
+<label class="option"><input type="radio" name="q18" value="Herramienta habitual para algunas tareas" required>Herramienta habitual para algunas tareas</label>
+<label class="option"><input type="radio" name="q18" value="Forma parte de procesos definidos" required>Forma parte de procesos definidos</label>
+<label class="option"><input type="radio" name="q18" value="Integrada en varios procesos" required>Integrada en varios procesos</label>
+<label class="option"><input type="radio" name="q18" value="Automatiza actividades o genera resultados sin intervención constante" required>Automatiza actividades o genera resultados sin intervención constante</label>
+<label class="option"><input type="radio" name="q18" value="No utilizamos IA" required>No utilizamos IA</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q19" data-type="single">
+<legend>19. ¿Qué tan capaz es tu empresa de identificar oportunidades concretas para utilizar IA y llevarlas a la práctica? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q19" value="No sabemos identificar oportunidades" required>No sabemos identificar oportunidades</label>
+<label class="option"><input type="radio" name="q19" value="Necesitamos que alguien externo nos indique oportunidades" required>Necesitamos que alguien externo nos indique oportunidades</label>
+<label class="option"><input type="radio" name="q19" value="Podemos identificar algunas, pero necesitamos apoyo para implementarlas" required>Podemos identificar algunas, pero necesitamos apoyo para implementarlas</label>
+<label class="option"><input type="radio" name="q19" value="Podemos identificar necesidades y elegir herramientas" required>Podemos identificar necesidades y elegir herramientas</label>
+<label class="option"><input type="radio" name="q19" value="Podemos adaptar o diseñar soluciones de IA" required>Podemos adaptar o diseñar soluciones de IA</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q20" data-type="single">
+<legend>20. ¿Tu empresa mide o identifica los resultados obtenidos mediante el uso de IA? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q20" value="No utilizamos IA" required>No utilizamos IA</label>
+<label class="option"><input type="radio" name="q20" value="No medimos resultados" required>No medimos resultados</label>
+<label class="option"><input type="radio" name="q20" value="Vemos beneficios, pero no los medimos" required>Vemos beneficios, pero no los medimos</label>
+<label class="option"><input type="radio" name="q20" value="Identificamos resultados de manera informal" required>Identificamos resultados de manera informal</label>
+<label class="option"><input type="radio" name="q20" value="Medimos algunos resultados con indicadores definidos" required>Medimos algunos resultados con indicadores definidos</label>
+<label class="option"><input type="radio" name="q20" value="Comparamos resultados antes y después" required>Comparamos resultados antes y después</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Necesidades y oportunidades</h2>
+<fieldset data-question="q21" data-type="multi" data-max-selections="3">
+<legend>21. ¿En qué áreas crees que tu negocio podría mejorar con IA? Elige hasta 3. *</legend><div class="meta">Tipo: selección múltiple · máximo 3</div>
+<label class="option"><input type="checkbox" name="q21" value="Administración">Administración</label>
+<label class="option"><input type="checkbox" name="q21" value="Ventas">Ventas</label>
+<label class="option"><input type="checkbox" name="q21" value="Atención al cliente">Atención al cliente</label>
+<label class="option"><input type="checkbox" name="q21" value="Marketing / publicidad">Marketing / publicidad</label>
+<label class="option"><input type="checkbox" name="q21" value="Redes / contenido">Redes / contenido</label>
+<label class="option"><input type="checkbox" name="q21" value="Contabilidad / finanzas">Contabilidad / finanzas</label>
+<label class="option"><input type="checkbox" name="q21" value="Inventario / compras">Inventario / compras</label>
+<label class="option"><input type="checkbox" name="q21" value="Operaciones / producción">Operaciones / producción</label>
+<label class="option"><input type="checkbox" name="q21" value="Logística / reparto">Logística / reparto</label>
+<label class="option"><input type="checkbox" name="q21" value="RH">RH</label>
+<label class="option"><input type="checkbox" name="q21" value="Análisis de información">Análisis de información</label>
+<label class="option"><input type="checkbox" name="q21" value="Automatización de tareas">Automatización de tareas</label>
+<label class="option"><input type="checkbox" name="q21" value="Otro">Otro</label>
+<label class="option"><input type="checkbox" name="q21" value="Ninguna">Ninguna</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q22" data-type="multi" data-max-selections="3">
+<legend>22. ¿Qué problemas consumen más recursos en tu negocio? Elige hasta 3. *</legend><div class="meta">Tipo: selección múltiple · máximo 3</div>
+<label class="option"><input type="checkbox" name="q22" value="Falta de tiempo">Falta de tiempo</label>
+<label class="option"><input type="checkbox" name="q22" value="Exceso administrativo">Exceso administrativo</label>
+<label class="option"><input type="checkbox" name="q22" value="Atención al cliente lenta">Atención al cliente lenta</label>
+<label class="option"><input type="checkbox" name="q22" value="Dificultad para conseguir clientes">Dificultad para conseguir clientes</label>
+<label class="option"><input type="checkbox" name="q22" value="Dificultad para vender">Dificultad para vender</label>
+<label class="option"><input type="checkbox" name="q22" value="Trabajo repetitivo">Trabajo repetitivo</label>
+<label class="option"><input type="checkbox" name="q22" value="Errores humanos">Errores humanos</label>
+<label class="option"><input type="checkbox" name="q22" value="Falta de información para decidir">Falta de información para decidir</label>
+<label class="option"><input type="checkbox" name="q22" value="Inventario / compras">Inventario / compras</label>
+<label class="option"><input type="checkbox" name="q22" value="Organización">Organización</label>
+<label class="option"><input type="checkbox" name="q22" value="Falta de personal">Falta de personal</label>
+<label class="option"><input type="checkbox" name="q22" value="Costos operativos altos">Costos operativos altos</label>
+<label class="option"><input type="checkbox" name="q22" value="Comunicación">Comunicación</label>
+<label class="option"><input type="checkbox" name="q22" value="Ningún problema importante">Ningún problema importante</label>
+<label class="option"><input type="checkbox" name="q22" value="Otro">Otro</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q23" data-type="multi" data-max-selections="3">
+<legend>23. ¿Qué actividades consumen más tiempo? Elige hasta 3. *</legend><div class="meta">Tipo: selección múltiple · máximo 3</div>
+<label class="option"><input type="checkbox" name="q23" value="Administración">Administración</label>
+<label class="option"><input type="checkbox" name="q23" value="Captura de datos">Captura de datos</label>
+<label class="option"><input type="checkbox" name="q23" value="Documentos">Documentos</label>
+<label class="option"><input type="checkbox" name="q23" value="Atención al cliente">Atención al cliente</label>
+<label class="option"><input type="checkbox" name="q23" value="Ventas">Ventas</label>
+<label class="option"><input type="checkbox" name="q23" value="Marketing / redes">Marketing / redes</label>
+<label class="option"><input type="checkbox" name="q23" value="Cotizaciones">Cotizaciones</label>
+<label class="option"><input type="checkbox" name="q23" value="Facturación / cobranza">Facturación / cobranza</label>
+<label class="option"><input type="checkbox" name="q23" value="Inventario">Inventario</label>
+<label class="option"><input type="checkbox" name="q23" value="Compras">Compras</label>
+<label class="option"><input type="checkbox" name="q23" value="Reportes / análisis">Reportes / análisis</label>
+<label class="option"><input type="checkbox" name="q23" value="Operaciones / producción">Operaciones / producción</label>
+<label class="option"><input type="checkbox" name="q23" value="Logística / reparto">Logística / reparto</label>
+<label class="option"><input type="checkbox" name="q23" value="RH">RH</label>
+<label class="option"><input type="checkbox" name="q23" value="Otro">Otro</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q24" data-type="multi" data-max-selections="3">
+<legend>24. ¿Qué resultado te aportaría más valor? Elige hasta 3. *</legend><div class="meta">Tipo: selección múltiple · máximo 3</div>
+<label class="option"><input type="checkbox" name="q24" value="Ahorrar tiempo">Ahorrar tiempo</label>
+<label class="option"><input type="checkbox" name="q24" value="Reducir costos">Reducir costos</label>
+<label class="option"><input type="checkbox" name="q24" value="Aumentar ventas">Aumentar ventas</label>
+<label class="option"><input type="checkbox" name="q24" value="Mejorar atención al cliente">Mejorar atención al cliente</label>
+<label class="option"><input type="checkbox" name="q24" value="Aumentar productividad">Aumentar productividad</label>
+<label class="option"><input type="checkbox" name="q24" value="Reducir errores">Reducir errores</label>
+<label class="option"><input type="checkbox" name="q24" value="Tomar mejores decisiones">Tomar mejores decisiones</label>
+<label class="option"><input type="checkbox" name="q24" value="Automatizar tareas">Automatizar tareas</label>
+<label class="option"><input type="checkbox" name="q24" value="Mejorar calidad">Mejorar calidad</label>
+<label class="option"><input type="checkbox" name="q24" value="Otro">Otro</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Intención y ruta</h2>
+<fieldset data-question="q25" data-type="single">
+<legend>25. ¿Qué tanto te interesa incorporar Inteligencia Artificial en tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q25" value="Nada" required>Nada</label>
+<label class="option"><input type="radio" name="q25" value="Poco" required>Poco</label>
+<label class="option"><input type="radio" name="q25" value="Algo" required>Algo</label>
+<label class="option"><input type="radio" name="q25" value="Mucho" required>Mucho</label>
+<label class="option"><input type="radio" name="q25" value="Ya la estamos incorporando activamente" required>Ya la estamos incorporando activamente</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q26" data-type="single">
+<legend>26. ¿Qué tanto quieres aprender sobre Inteligencia Artificial para tu negocio? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q26" value="No quiero aprender sobre IA por ahora" required>No quiero aprender sobre IA por ahora</label>
+<label class="option"><input type="radio" name="q26" value="Quiero conocer lo básico para entender de qué se trata" required>Quiero conocer lo básico para entender de qué se trata</label>
+<label class="option"><input type="radio" name="q26" value="Quiero aprender qué puede hacer la IA por mi negocio" required>Quiero aprender qué puede hacer la IA por mi negocio</label>
+<label class="option"><input type="radio" name="q26" value="Quiero aprender a utilizar herramientas de IA" required>Quiero aprender a utilizar herramientas de IA</label>
+<label class="option"><input type="radio" name="q26" value="Quiero desarrollar habilidades para aplicar IA de forma continua en mi negocio" required>Quiero desarrollar habilidades para aplicar IA de forma continua en mi negocio</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q27" data-type="single">
+<legend>27. ¿Qué te gustaría hacer primero con IA en tu negocio? No necesitas saber de IA para responder. *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q27" value="Aprender qué puede hacer la IA y cómo usarla" required>Aprender qué puede hacer la IA y cómo usarla</label>
+<label class="option"><input type="radio" name="q27" value="Mejorar una tarea que hoy me quita mucho tiempo" required>Mejorar una tarea que hoy me quita mucho tiempo</label>
+<label class="option"><input type="radio" name="q27" value="Mejorar ventas o conseguir clientes" required>Mejorar ventas o conseguir clientes</label>
+<label class="option"><input type="radio" name="q27" value="Mejorar la atención al cliente" required>Mejorar la atención al cliente</label>
+<label class="option"><input type="radio" name="q27" value="Crear contenido y publicidad" required>Crear contenido y publicidad</label>
+<label class="option"><input type="radio" name="q27" value="Automatizar tareas o procesos" required>Automatizar tareas o procesos</label>
+<label class="option"><input type="radio" name="q27" value="Analizar información y tomar mejores decisiones" required>Analizar información y tomar mejores decisiones</label>
+<label class="option"><input type="radio" name="q27" value="Implementar una solución específica" required>Implementar una solución específica</label>
+<label class="option"><input type="radio" name="q27" value="Todavía no sé" required>Todavía no sé</label>
+<label class="option"><input type="radio" name="q27" value="Quiero conocer qué podría hacer con IA" required>Quiero conocer qué podría hacer con IA</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Capacitación e inversión</h2>
+<fieldset data-question="q28" data-type="single">
+<legend>28. ¿Estarías dispuesto a invertir en capacitación sobre IA? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q28" value="No" required>No</label>
+<label class="option"><input type="radio" name="q28" value="Sí, si es gratuita o de muy bajo costo" required>Sí, si es gratuita o de muy bajo costo</label>
+<label class="option"><input type="radio" name="q28" value="Sí, una cantidad pequeña" required>Sí, una cantidad pequeña</label>
+<label class="option"><input type="radio" name="q28" value="Sí, una cantidad moderada" required>Sí, una cantidad moderada</label>
+<label class="option"><input type="radio" name="q28" value="Sí, si queda claro el beneficio" required>Sí, si queda claro el beneficio</label>
+<label class="option"><input type="radio" name="q28" value="Ya invertimos en capacitación" required>Ya invertimos en capacitación</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q29" data-type="single">
+<legend>29. ¿Cuánto tiempo podrías dedicar por semana a aprender sobre IA? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q29" value="Menos de 30 minutos" required>Menos de 30 minutos</label>
+<label class="option"><input type="radio" name="q29" value="30 min–1 hora" required>30 min–1 hora</label>
+<label class="option"><input type="radio" name="q29" value="1–2 horas" required>1–2 horas</label>
+<label class="option"><input type="radio" name="q29" value="2–4 horas" required>2–4 horas</label>
+<label class="option"><input type="radio" name="q29" value="Más de 4 horas" required>Más de 4 horas</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+<fieldset data-question="q30" data-type="single">
+<legend>30. ¿Cuánto gastas actualmente al mes en herramientas digitales / software? *</legend><div class="meta">Tipo: selección única</div>
+<label class="option"><input type="radio" name="q30" value="Nada" required>Nada</label>
+<label class="option"><input type="radio" name="q30" value="Menos de $500" required>Menos de $500</label>
+<label class="option"><input type="radio" name="q30" value="$500–$2,000" required>$500–$2,000</label>
+<label class="option"><input type="radio" name="q30" value="$2,001–$5,000" required>$2,001–$5,000</label>
+<label class="option"><input type="radio" name="q30" value="Más de $5,000" required>Más de $5,000</label>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<section><h2>Barreras</h2>
+<fieldset data-question="q31" data-type="multi" data-max-selections="3">
+<legend>31. ¿Qué podría impedirte incorporar IA? Elige hasta 3. *</legend><div class="meta">Tipo: selección múltiple · máximo 3</div>
+<label class="option"><input type="checkbox" name="q31" value="No sé por dónde empezar">No sé por dónde empezar</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de conocimiento">Falta de conocimiento</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de tiempo">Falta de tiempo</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de personal">Falta de personal</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de dinero">Falta de dinero</label>
+<label class="option"><input type="checkbox" name="q31" value="No veo un beneficio claro">No veo un beneficio claro</label>
+<label class="option"><input type="checkbox" name="q31" value="No conozco las herramientas">No conozco las herramientas</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de infraestructura tecnológica">Falta de infraestructura tecnológica</label>
+<label class="option"><input type="checkbox" name="q31" value="Falta de sistemas / información digital">Falta de sistemas / información digital</label>
+<label class="option"><input type="checkbox" name="q31" value="Miedo a errores">Miedo a errores</label>
+<label class="option"><input type="checkbox" name="q31" value="Seguridad / privacidad">Seguridad / privacidad</label>
+<label class="option"><input type="checkbox" name="q31" value="Resistencia del personal">Resistencia del personal</label>
+<label class="option"><input type="checkbox" name="q31" value="Dificultad de implementación">Dificultad de implementación</label>
+<label class="option"><input type="checkbox" name="q31" value="No es una prioridad">No es una prioridad</label>
+<label class="option"><input type="checkbox" name="q31" value="Ninguna">Ninguna</label>
+<label class="option"><input type="checkbox" name="q31" value="Otro">Otro</label>
+<div class="counter"></div>
+<div class="error">Completa esta pregunta.</div></fieldset>
+</section>
+<div class="actions"><button class="primary" type="submit">Calcular y enviar diagnóstico</button><button class="secondary" type="button" id="resetBtn">Limpiar</button></div>
+</form>
+<div id="result" class="card result"><h2>Resultado del piloto</h2><div id="saveStatus" class="small"></div><div class="metricgrid" id="metrics"></div>
+<hr style="border:0;border-top:1px solid #e7ebf0;margin:18px 0"><div class="route" id="route"></div><div id="routeReason"></div><div id="warnings"></div>
+<h3>Resumen del perfil</h3><div id="summary"></div><details><summary>Datos estructurados enviados</summary><pre id="jsonOutput"></pre></details>
+<p class="small">Nota metodológica: el Índice y el ruteo son provisionales y deben validarse con datos reales del piloto.</p></div></div>
+<script>
+const TAXONOMY = {"Comercio":["Alimentos y abarrotes","Ropa, calzado y accesorios","Hogar, muebles y decoración","Electrónica, tecnología y telefonía","Ferretería, materiales y refacciones","Comercio especializado / mayorista","Comercio en línea / e-commerce","Otro"],"Servicios":["Servicios profesionales / consultoría","Servicios administrativos / contables","Servicios para empresas","Servicios para el hogar","Reparación / mantenimiento","Belleza / cuidado personal","Servicios creativos / comunicación","Otro"],"Alimentos y bebidas":["Restaurante","Cafetería","Panadería / pastelería","Comida preparada / cocina económica","Comida rápida","Catering / banquetes","Producción / venta de alimentos y bebidas","Otro"],"Manufactura / producción":["Alimentos y bebidas","Textil / confección","Calzado / marroquinería","Muebles / madera","Metal / herrería","Plásticos / químicos / productos especializados","Impresión / artes gráficas","Otro"],"Construcción":["Construcción de vivienda","Construcción comercial / industrial","Remodelación / mantenimiento","Instalaciones","Acabados / pintura","Carpintería / cancelería / herrería","Supervisión / servicios especializados de obra","Otro"],"Transporte / logística":["Transporte de mercancías","Transporte de pasajeros","Mensajería / paquetería","Reparto / última milla","Mudanzas","Almacenamiento / bodega","Logística / distribución / flotas","Otro"],"Turismo / hospedaje":["Hotel / alojamiento","Hostal / alojamiento económico","Alojamiento vacacional","Agencia de viajes","Tours / operadores turísticos","Experiencias / actividades turísticas","Eventos / convenciones","Otro"],"Salud":["Consultorio médico","Consultorio dental","Psicología / salud mental","Fisioterapia / rehabilitación","Laboratorio / diagnóstico","Clínica / centro de atención","Veterinaria / farmacia / bienestar","Otro"],"Educación / capacitación":["Educación básica / media","Educación superior","Capacitación empresarial","Cursos / talleres especializados","Idiomas","Regularización / tutorías","Formación técnica / oficios","Otro"],"Tecnología / servicios digitales":["Desarrollo de software / aplicaciones","Desarrollo web","Soporte / servicios de TI","Infraestructura / redes","Ciberseguridad","Datos / analítica / IA","Marketing / diseño / contenido digital","Otro"],"Otro":["Actividad no clasificada","Actividad especializada","Actividad comercial","Actividad de servicios","Actividad productiva","Actividad profesional","Otra actividad"]};
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVSrHW6RM_QG5u62KK52ed6Ukxd8Ipm3CtghMDd7OXFdVRqD1ZVHGfJbTzQXcKlGu4/exec";
+
+const form=document.getElementById("diagnostico"),q2Options=document.getElementById("q2-options"),q2Value=document.getElementById("q2-value");
+function renderQ2(){const giro=document.querySelector('input[name="q1"]:checked')?.value;q2Options.innerHTML="";q2Value.value="";if(!giro||!TAXONOMY[giro])return;TAXONOMY[giro].forEach(o=>{const l=document.createElement("label");l.className="option";l.innerHTML='<input type="radio" name="q2_option" value="'+o.replace(/"/g,"&quot;")+'">'+o;q2Options.appendChild(l)});q2Options.querySelectorAll('input[name="q2_option"]').forEach(r=>r.addEventListener("change",()=>q2Value.value=r.value))}
+document.querySelectorAll('input[name="q1"]').forEach(i=>i.addEventListener("change",renderQ2));
+document.querySelectorAll('fieldset[data-type="multi"]').forEach(fs=>{const max=Number(fs.dataset.maxSelections||99),inputs=fs.querySelectorAll('input[type="checkbox"]'),counter=fs.querySelector(".counter");const update=()=>{const checked=[...inputs].filter(i=>i.checked);if(checked.length>max)checked[checked.length-1].checked=false;const n=[...inputs].filter(i=>i.checked).length;if(counter)counter.textContent=`Seleccionadas: ${n} / ${max}`};inputs.forEach(i=>i.addEventListener("change",update));update()});
+function values(name){return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(x=>x.value)}
+function value(name){const el=form.querySelector(`input[name="${name}"]:checked`);if(el)return el.value;const text=form.querySelector(`input[name="${name}"]`);return text?text.value.trim():""}
+function validate(){let ok=true;form.querySelectorAll("fieldset").forEach(fs=>fs.classList.remove("invalid"));form.querySelectorAll("fieldset").forEach(fs=>{const type=fs.dataset.type,q=fs.dataset.question;let good=true;if(q==="q2")good=!!q2Value.value;else if(type==="single")good=!!form.querySelector(`input[name="${q}"]:checked`);else if(type==="multi")good=form.querySelectorAll(`input[name="${q}"]:checked`).length>0;else if(type==="text")good=!!form.querySelector(`input[name="${q}"]`).value.trim();if(!good){fs.classList.add("invalid");ok=false}});return ok}
+function scoreKnowledge(v){return {"Casi nada":0,"He escuchado de ella, pero sé poco":20,"Conozco algunos conceptos y herramientas":40,"Sé utilizar algunas herramientas de IA":60,"Tengo buen conocimiento y conozco diferentes aplicaciones":80,"Conocimiento avanzado / especializado":100}[v]}
+function scoreAdoption(v){return {"No la usamos":0,"La hemos probado pero actualmente no":15,"La usamos ocasionalmente en algunas actividades":40,"La usamos regularmente en algunas actividades":70,"La IA ya forma parte de varias actividades":100}[v]}
+function breadthScore(n,kind){if(n<=0)return 0;const map=kind==="areas"?[0,20,35,50,60,70,78,85,90,95,100]:[0,20,35,50,60,70,78,85,90,100];return map[Math.min(n,map.length-1)]}
+function scoreIntegration(v){return {"No utilizamos IA":0,"Solo pruebas":10,"Apoyo ocasional en tareas individuales":25,"Herramienta habitual para algunas tareas":45,"Forma parte de procesos definidos":65,"Integrada en varios procesos":80,"Automatiza actividades o genera resultados sin intervención constante":90}[v]}
+function scoreFrequency(v){return {"Nunca":0,"Menos de una vez al mes":10,"Algunas veces al mes":30,"Algunas veces por semana":55,"Todos o casi todos los días":80,"Varias veces al día":100}[v]}
+function p20Level(v){return {"No sabemos identificar oportunidades":1,"Necesitamos que alguien externo nos indique oportunidades":2,"Podemos identificar algunas, pero necesitamos apoyo para implementarlas":3,"Podemos identificar necesidades y elegir herramientas":4,"Podemos adaptar o diseñar soluciones de IA":5}[v]}
+function interestLevel(v){return {"Nada":1,"Poco":2,"Algo":3,"Mucho":4,"Ya la estamos incorporando activamente":5}[v]}
+function calculate(res){
+ const knowledge=scoreKnowledge(res.q13),adoption=scoreAdoption(res.q14);
+ const areas=res.q15.filter(x=>x!=="No utilizamos IA").length,apps=res.q17.filter(x=>x!=="No utilizamos IA").length;
+ const areaScore=breadthScore(areas,"areas"),appScore=breadthScore(apps,"apps"),amplitude=(areaScore+appScore)/2;
+ const integration=scoreIntegration(res.q18),frequency=scoreFrequency(res.q16),index=.25*knowledge+.25*adoption+.20*amplitude+.30*integration;
+ const p20=p20Level(res.q19),interest=interestLevel(res.q25);
+ let route="R2 — IA práctica para mi negocio",reason="Ruta residual provisional: existe una necesidad concreta, pero no se activa una ruta más específica.";
+ if(index>=75||(knowledge>=80&&adoption>=70&&integration>=80&&p20>=4)){route="R5 — IA avanzada para empresas";reason="Alta madurez relativa y/o combinación de conocimiento, adopción, integración y autonomía suficientes para una ruta avanzada."}
+ else if((adoption>=70&&integration>=65&&p20>=3)||(index>=60&&adoption>=70&&p20>=4&&integration>=45)){route="R4 — Automatiza y escala";reason="Hay adopción relevante y señales de integración/capacidad de implementación para trabajar automatización y escala."}
+ else if(index<45&&interest>=4&&p20<=3){route="R6 — Aceleración";reason="La situación actual frente a IA todavía es baja, pero existe una intención alta de actuar; conviene convertirla en un primer resultado."}
+ else if(adoption>=70&&frequency>=55&&integration<65&&p20>=3){route="R3 — De usuario a proceso";reason="Existe uso real/frecuente, pero la integración en procesos todavía es parcial."}
+ else if(index<=30&&adoption<=15&&p20<=2&&interest<=3){route="R1 — Descubre la IA";reason="Baja situación actual, baja adopción, baja capacidad de implementación y baja intención de incorporar IA."}
+ const warnings=[];
+ if(res.q14==="No la usamos"&&(!res.q15.includes("No utilizamos IA")||!res.q17.includes("No utilizamos IA")||res.q18!=="No utilizamos IA"))warnings.push("Posible inconsistencia: se indicó que no se usa IA, pero alguna respuesta dependiente señala uso actual.");
+ if(res.q14==="No la usamos"&&res.q16!=="Nunca")warnings.push("Posible inconsistencia entre uso actual y frecuencia.");
+ if(res.q15.includes("No utilizamos IA")&&res.q15.length>1)warnings.push("Q15 contiene 'No utilizamos IA' junto con otras áreas.");
+ if(res.q17.includes("No utilizamos IA")&&res.q17.length>1)warnings.push("Q17 contiene 'No utilizamos IA' junto con otras aplicaciones.");
+ return {knowledge,adoption,amplitude,integration,frequency,index,p20,interest,route,reason,warnings,version_scoring:"Índice CANACOPE V2 provisional",routing_version:"Matriz de ruteo provisional"};
+}
+function collect(){const r={};for(let n=1;n<=31;n++){const q="q"+n;if(n===2)r[q]=q2Value.value;else if([10,11,15,17,21,22,23,24,31].includes(n))r[q]=values(q);else r[q]=value(q)}return r}
+function showResult(res,calc,id,sent){document.getElementById("result").style.display="block";document.getElementById("metrics").innerHTML=[["Índice",calc.index.toFixed(1)+"/100"],["Conocimiento",calc.knowledge+"/100"],["Adopción",calc.adoption+"/100"],["Amplitud",calc.amplitude.toFixed(1)+"/100"],["Integración",calc.integration+"/100"]].map(x=>`<div class="metric"><b>${x[1]}</b>${x[0]}</div>`).join("");document.getElementById("route").textContent=calc.route;document.getElementById("routeReason").textContent=calc.reason;document.getElementById("saveStatus").textContent=APPS_SCRIPT_URL?(sent?"Envío realizado. ID: "+id:"No se pudo confirmar el envío. ID local: "+id):"Modo local: no se envió a Google Sheets.";document.getElementById("warnings").innerHTML=calc.warnings.length?"<p><b>Revisiones:</b></p><ul>"+calc.warnings.map(w=>"<li>"+w+"</li>").join("")+"</ul>":"";document.getElementById("summary").innerHTML="<p><b>Giro:</b> "+res.q1+" · <b>Subcategoría:</b> "+res.q2+" · <b>Personas:</b> "+res.q3+"</p><p><b>Oportunidades:</b> "+(res.q21.join(", ")||"—")+"</p><p><b>Problemas:</b> "+(res.q22.join(", ")||"—")+"</p><p><b>Primera acción:</b> "+res.q27+"</p><p><b>Barreras:</b> "+(res.q31.join(", ")||"—")+"</p>";document.getElementById("jsonOutput").textContent=JSON.stringify({id,responses:res,calculated:calc},null,2);document.getElementById("result").scrollIntoView({behavior:"smooth"})}
+function sendToAppsScript(payload){if(!APPS_SCRIPT_URL)return Promise.resolve(null);return fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).then(()=>true).catch(()=>false)}
+form.addEventListener("submit",async e=>{e.preventDefault();if(!validate()){document.querySelector(".invalid")?.scrollIntoView({behavior:"smooth",block:"center"});return}const responses=collect(),calc=calculate(responses),id="CAN-"+new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,6).toUpperCase(),payload={id,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v5",responses,calculated:calc},sent=await sendToAppsScript(payload);showResult(responses,calc,id,sent)});
+document.getElementById("resetBtn").addEventListener("click",()=>{if(confirm("¿Limpiar todas las respuestas?"))location.reload()});renderQ2();
+</script></body></html>
