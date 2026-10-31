@@ -65,6 +65,8 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 <div style="margin-bottom:14px"><label for="nombre_empresa"><b>Nombre de la empresa *</b></label><input type="text" id="nombre_empresa" name="nombre_empresa" required placeholder="Escribe el nombre de la empresa"></div>
 <div style="margin-bottom:14px"><label for="nombre_respondente"><b>Nombre de quien responde *</b></label><input type="text" id="nombre_respondente" name="nombre_respondente" required placeholder="Escribe tu nombre"></div>
 <div style="margin-bottom:14px"><label for="puesto_funcion"><b>Puesto o función *</b></label><select id="puesto_funcion" name="puesto_funcion" required style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #ccd4df;border-radius:9px;font-size:15px;background:#fff"><option value="">Selecciona una opción</option><option>Propietario(a) / dueño(a)</option><option>Socio(a)</option><option>Director(a) / gerente</option><option>Administrador(a)</option><option>Encargado(a)</option><option>Otro</option></select></div>
+<div style="margin-bottom:14px"><label for="email"><b>Correo electrónico</b></label><input type="email" id="email" name="email" autocomplete="email" placeholder="Escribe tu correo electrónico" required></div>
+<div style="margin-bottom:14px"><label for="telefono"><b>Teléfono</b></label><input type="tel" id="telefono" name="telefono" autocomplete="tel" placeholder="10 dígitos" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" required></div>
 <h2>Perfil del negocio</h2>
 <fieldset data-question="q1" data-type="single">
 <legend>1. ¿Cuál es la principal actividad de tu negocio? *</legend><div class="meta">Tipo: selección única</div>
@@ -432,7 +434,13 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 <div class="counter"></div>
 <div class="error">Completa esta pregunta.</div></fieldset>
 </section>
-<div class="actions"><button class="primary" type="submit">Calcular y enviar diagnóstico</button><button class="secondary" type="button" id="resetBtn">Limpiar</button></div>
+<div class="consent-box" style="margin:22px 0 16px;padding:14px 16px;border:1px solid #d9dee7;border-radius:10px;background:#f8fafc">
+<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;line-height:1.45">
+<input type="checkbox" id="consentimiento" name="consentimiento" required style="margin-top:4px">
+<span>He leído y acepto los Términos y Condiciones y reconozco haber leído el Aviso de Privacidad sobre el tratamiento de mis datos personales. <a href="aviso-de-privacidad.html" target="_blank" rel="noopener noreferrer">Consulta el Aviso de Privacidad aquí</a></span>
+</label>
+</div>
+<div class="actions"><button class="primary" type="submit" id="submitBtn" disabled>Calcular y enviar diagnóstico</button><button class="secondary" type="button" id="resetBtn">Limpiar</button></div>
 </form>
 <div id="result" class="card result"><h2>Resultado del piloto</h2><div id="saveStatus" class="small"></div><div class="metricgrid" id="metrics"></div>
 <hr style="border:0;border-top:1px solid #e7ebf0;margin:18px 0"><div class="route" id="route"></div><div id="routeReason"></div><div id="warnings"></div>
@@ -499,6 +507,20 @@ if(aiLogicModalDismiss){
 function getLogicAutocompleted(){return Object.entries(aiLogicAutocompleted).filter(([,wasAuto])=>wasAuto).map(([q])=>{const v=q==="q16"?"Nunca":"No utilizamos IA";return `${q}=${v} (por Q14=No la usamos)`})}
 function showResult(res,calc,id,sent){document.getElementById("result").style.display="block";document.getElementById("metrics").innerHTML=[["Índice",calc.index.toFixed(1)+"/100"],["Conocimiento",calc.knowledge+"/100"],["Adopción",calc.adoption+"/100"],["Amplitud",calc.amplitude.toFixed(1)+"/100"],["Integración",calc.integration+"/100"]].map(x=>`<div class="metric"><b>${x[1]}</b>${x[0]}</div>`).join("");document.getElementById("route").textContent=calc.route;document.getElementById("routeReason").textContent=calc.reason;document.getElementById("saveStatus").textContent=APPS_SCRIPT_URL?(sent?"Envío realizado. ID: "+id:"No se pudo confirmar el envío. ID local: "+id):"Modo local: no se envió a Google Sheets.";document.getElementById("warnings").innerHTML=calc.warnings.length?"<p><b>Revisiones:</b></p><ul>"+calc.warnings.map(w=>"<li>"+w+"</li>").join("")+"</ul>":"";document.getElementById("summary").innerHTML="<p><b>Giro:</b> "+res.q1+" · <b>Subcategoría:</b> "+res.q2+" · <b>Personas:</b> "+res.q3+"</p><p><b>Oportunidades:</b> "+(res.q21.join(", ")||"—")+"</p><p><b>Problemas:</b> "+(res.q22.join(", ")||"—")+"</p><p><b>Primera acción:</b> "+res.q27+"</p><p><b>Barreras:</b> "+(res.q31.join(", ")||"—")+"</p>";document.getElementById("jsonOutput").textContent=JSON.stringify({id,responses:res,calculated:calc,logic_autocompletada:getLogicAutocompleted()},null,2);document.getElementById("result").scrollIntoView({behavior:"smooth"})}
 function sendToAppsScript(payload){if(!APPS_SCRIPT_URL)return Promise.resolve(null);return fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).then(()=>true).catch(()=>false)}
-form.addEventListener("submit",async e=>{e.preventDefault();if(!validate()){document.querySelector(".invalid")?.scrollIntoView({behavior:"smooth",block:"center"});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),id="CAN-"+new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,6).toUpperCase(),payload={id,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.2",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(responses,calc,id,sent)});
+const consentimiento=document.getElementById("consentimiento");
+const submitBtn=document.getElementById("submitBtn");
+if(consentimiento&&submitBtn){
+  consentimiento.addEventListener("change",()=>{
+    submitBtn.disabled=!consentimiento.checked;
+  });
+}
+form.addEventListener("submit",async e=>{e.preventDefault();if(!validate()){document.querySelector(".invalid")?.scrollIntoView({behavior:"smooth",block:"center"});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),id="CAN-"+new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,6).toUpperCase(),payload={id,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.2",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(responses,calc,id,sent)});
 document.getElementById("resetBtn").addEventListener("click",()=>{if(confirm("¿Limpiar todas las respuestas?"))location.reload()});renderQ2();
+
+const telefonoInput=document.getElementById("telefono");
+if(telefonoInput){
+  telefonoInput.addEventListener("input",()=>{
+    telefonoInput.value=telefonoInput.value.replace(/\D/g,"").slice(0,10);
+  });
+}
 </script></body></html>
