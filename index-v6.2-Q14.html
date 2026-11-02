@@ -59,6 +59,9 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
   font-weight:700;
   font-size:15px;
 }
+
+/* v6.3.9 — Modal de procesamiento */
+#processingModal{position:fixed;inset:0;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:99999}#processingModal.active{display:flex}.processing-card{width:min(560px,100%);background:#fff;border-radius:18px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;max-height:90vh;overflow:auto}.processing-spinner{width:46px;height:46px;border:5px solid #e7e7e7;border-top-color:#1f6feb;border-radius:50%;animation:maipymeSpin .85s linear infinite;margin:0 auto 20px}@keyframes maipymeSpin{to{transform:rotate(360deg)}}.processing-card h2{margin:0 0 12px;font-size:24px}.processing-card p{margin:8px 0;line-height:1.5}.processing-card .success-icon{font-size:38px;margin-bottom:10px}.processing-card .modal-download{display:inline-block;margin-top:18px;padding:13px 20px;border-radius:10px;background:#1f6feb;color:#fff;text-decoration:none;font-weight:700}.processing-card .modal-retry{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:10px;border:0;background:#1f6feb;color:#fff;font-weight:700;cursor:pointer}body.modal-open{overflow:hidden}
 </style></head><body><div class="wrap">
 <header>
 <div class="brandbar">
@@ -68,7 +71,7 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 <h1>Diagnóstico CANACOPE · mAIpyme</h1><p class="subtitle">Diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
 <div class="notice"><b>Duración:</b> aproximadamente 10 minutos.<br><b>Quién responde:</b> preferentemente dueño, socio, director o gerente general.<br>
 <b>Modo piloto:</b> calcula el Índice CANACOPE y una ruta provisional. Si se configura una URL de Google Apps Script, también guarda el registro en Google Sheets.</div></header>
-<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.8" novalidate>
+<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.9" novalidate>
 <section><h2>Datos de identificación</h2>
 <div class="notice" style="margin-bottom:14px">Estos datos se utilizan para identificar el diagnóstico y dar seguimiento. <b>No forman parte del Índice CANACOPE ni de la clasificación de la ruta.</b></div>
 <div style="margin-bottom:14px"><label for="nombre_empresa"><b>Nombre de la empresa *</b></label><input type="text" id="nombre_empresa" name="nombre_empresa" required placeholder="Escribe el nombre de la empresa"></div>
@@ -565,8 +568,9 @@ if(aiLogicModalDismiss){
 }
 
 function getLogicAutocompleted(){return Object.entries(aiLogicAutocompleted).filter(([,wasAuto])=>wasAuto).map(([q])=>{const v=q==="q16"?"Nunca":"No utilizamos IA";return `${q}=${v} (por Q14=No la usamos)`})}
-function showResult(sent,codigoDiagnostico){document.getElementById("result").style.display="block";document.getElementById("saveStatus").textContent=sent?"Tu diagnóstico fue recibido correctamente.":"No pudimos confirmar el envío. Si no recibes tu análisis, por favor vuelve a intentarlo.";if(sent&&codigoDiagnostico){const link=document.getElementById("downloadReportLink");link.href=APPS_SCRIPT_URL+"?pdf="+encodeURIComponent(codigoDiagnostico);link.target="_blank";link.rel="noopener";link.onclick=null;}document.getElementById("result").scrollIntoView({behavior:"smooth"})}
-function sendToAppsScript(payload){if(!APPS_SCRIPT_URL)return Promise.resolve(null);return fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).then(()=>true).catch(()=>false)}
+function showResult(sent,codigoDiagnostico){const status=document.getElementById("saveStatus");if(status)status.textContent=sent?"Tu diagnóstico fue recibido correctamente.":"No pudimos confirmar el envío. Si no recibes tu análisis, por favor vuelve a intentarlo.";const b=document.querySelector('button[type="submit"],input[type="submit"]');if(b){b.disabled=false;b.textContent="Enviar diagnóstico"}if(sent)showProcessingSuccess(codigoDiagnostico);else showProcessingError()}document.getElementById("result").scrollIntoView({behavior:"smooth"})}
+function sendToAppsScript(payload){if(!APPS_SCRIPT_URL)return Promise.resolve(null);return openProcessingModal();const _submitButton=document.querySelector('button[type="submit"],input[type="submit"]');if(_submitButton){_submitButton.disabled=true;_submitButton.textContent="⏳ Procesando tu diagnóstico…";}
+fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).then(()=>true).catch(()=>false)}
 const consentimiento=document.getElementById("consentimiento");
 const submitBtn=document.getElementById("submitBtn");
 if(consentimiento&&submitBtn){
@@ -578,7 +582,7 @@ if(consentimiento&&submitBtn){
 const codigoEmpresa=(()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"EMP-"+s})();
 function generarCodigoDiagnostico(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"DIA-"+new Date().getFullYear()+"-"+s}
 
-form.addEventListener("submit",async e=>{e.preventDefault();const validation=validate();if(!validation.ok){const target=validation.firstInvalid[0];target?.scrollIntoView({behavior:"smooth",block:"center"});if(target?.focus)target.focus({preventScroll:true});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.8",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent,codigoDiagnostico)});
+form.addEventListener("submit",async e=>{e.preventDefault();const validation=validate();if(!validation.ok){const target=validation.firstInvalid[0];target?.scrollIntoView({behavior:"smooth",block:"center"});if(target?.focus)target.focus({preventScroll:true});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.9",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent,codigoDiagnostico)});
 document.getElementById("resetBtn").addEventListener("click",()=>{if(confirm("¿Limpiar todas las respuestas?"))location.reload()});renderQ2();
 
 function validateEmailLive(){
@@ -614,4 +618,14 @@ if(telefonoInput){
   });
   telefonoInput.addEventListener("blur",validateTelefonoLive);
 }
-</script></body></html>
+</script>
+<div id="processingModal" aria-hidden="true"><div class="processing-card" role="dialog" aria-modal="true" aria-labelledby="processingTitle"><div id="processingLoading"><div class="processing-spinner" aria-hidden="true"></div><h2 id="processingTitle">Estamos procesando tu diagnóstico</h2><p>Estamos guardando tus respuestas y preparando tu análisis personalizado.</p><p><strong>Esto puede tardar unos segundos…</strong></p></div><div id="processingSuccess" style="display:none"><div class="success-icon">🎉</div><h2>¡Gracias por completar tu diagnóstico!</h2><p>Recibimos correctamente tus respuestas. Estamos preparando tu <strong>análisis personalizado</strong>, con recomendaciones pensadas para las necesidades y oportunidades de tu negocio.</p><p>📩 <strong>En breve recibirás el documento en el correo que registraste.</strong></p><p><strong>O, si lo prefieres, descárgalo aquí:</strong></p><a id="modalDownloadReportLink" class="modal-download" href="#" target="_blank" rel="noopener">📄 Descargar mi análisis personalizado</a><p style="margin-top:20px"><strong>Y esto apenas comienza.</strong></p><p>Te ayudaremos a aprender, paso a paso, cómo aprovechar la Inteligencia Artificial para mejorar las actividades de tu negocio y convertir oportunidades en acciones concretas.</p><p><strong>Tu diagnóstico es el primer paso. Ahora descubre qué puedes hacer con la IA.</strong></p></div><div id="processingError" style="display:none"><div class="success-icon">⚠️</div><h2>No pudimos completar el envío</h2><p>Ocurrió un problema al guardar tu diagnóstico. Tus respuestas permanecen en el formulario.</p><button type="button" class="modal-retry" id="modalRetryButton">Intentar nuevamente</button></div></div></div>
+<script>
+const processingModal=document.getElementById("processingModal"),processingLoading=document.getElementById("processingLoading"),processingSuccess=document.getElementById("processingSuccess"),processingError=document.getElementById("processingError"),modalDownloadReportLink=document.getElementById("modalDownloadReportLink"),modalRetryButton=document.getElementById("modalRetryButton");
+function openProcessingModal(){processingLoading.style.display="block";processingSuccess.style.display="none";processingError.style.display="none";processingModal.classList.add("active");processingModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open")}
+function showProcessingSuccess(c){processingLoading.style.display="none";processingError.style.display="none";processingSuccess.style.display="block";if(c)modalDownloadReportLink.href=APPS_SCRIPT_URL+"?pdf="+encodeURIComponent(c)}
+function showProcessingError(){processingLoading.style.display="none";processingSuccess.style.display="none";processingError.style.display="block"}
+modalRetryButton.addEventListener("click",function(){processingModal.classList.remove("active");processingModal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open");const b=document.querySelector('button[type="submit"],input[type="submit"]');if(b){b.disabled=false;b.textContent="Enviar diagnóstico"}});
+processingModal.addEventListener("click",function(e){if(e.target===processingModal)e.stopPropagation()});
+</script>
+</body></html>
