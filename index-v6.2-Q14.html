@@ -14,7 +14,7 @@ legend{font-weight:700;line-height:1.35;padding:0;max-width:100%}.meta{font-size
 input[type=text]{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #ccd4df;border-radius:9px;font-size:15px}
 button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer}.primary{background:#1d4ed8;color:white}
 .secondary{background:#eef2f7;color:#243142;margin-left:8px}.actions{position:sticky;bottom:10px;background:rgba(255,255,255,.95);padding:12px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-.error{display:none;color:#b42318;font-size:13px;margin-top:7px}.invalid .error{display:block}.counter{font-size:12px;color:#687585;margin-top:6px}
+.error{display:none;color:#b42318;font-size:13px;margin-top:7px}.invalid .error{display:block}.counter{font-size:12px;color:#687585;margin-top:6px}.field-error{display:none;color:#b42318;font-size:13px;margin-top:7px}.field-invalid .field-error{display:block}.field-invalid input,.field-invalid select{border-color:#b42318!important;background:#fff7f7}
 .result{display:none}.metricgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.metric{background:#f6f8fb;border-radius:10px;padding:12px;text-align:center}.metric b{display:block;font-size:22px}
 .route{font-size:22px;font-weight:800;margin-bottom:8px}pre{white-space:pre-wrap;word-break:break-word;background:#101828;color:#eef2f6;padding:14px;border-radius:10px;max-height:340px;overflow:auto;font-size:12px}
 .small{font-size:12px;color:#667085}@media(max-width:700px){.metricgrid{grid-template-columns:repeat(2,1fr)}}
@@ -59,14 +59,14 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 <header><h1>CANACOPE · mAIpyme</h1><p class="subtitle">Prototipo de diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
 <div class="notice"><b>Duración:</b> aproximadamente 10 minutos.<br><b>Quién responde:</b> preferentemente dueño, socio, director o gerente general.<br>
 <b>Modo piloto:</b> calcula el Índice CANACOPE y una ruta provisional. Si se configura una URL de Google Apps Script, también guarda el registro en Google Sheets.</div></header>
-<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.0" novalidate>
+<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.2" novalidate>
 <section><h2>Datos de identificación</h2>
 <div class="notice" style="margin-bottom:14px">Estos datos se utilizan para identificar el diagnóstico y dar seguimiento. <b>No forman parte del Índice CANACOPE ni de la clasificación de la ruta.</b></div>
 <div style="margin-bottom:14px"><label for="nombre_empresa"><b>Nombre de la empresa *</b></label><input type="text" id="nombre_empresa" name="nombre_empresa" required placeholder="Escribe el nombre de la empresa"></div>
 <div style="margin-bottom:14px"><label for="nombre_respondente"><b>Nombre de quien responde *</b></label><input type="text" id="nombre_respondente" name="nombre_respondente" required placeholder="Escribe tu nombre"></div>
 <div style="margin-bottom:14px"><label for="puesto_funcion"><b>Puesto o función *</b></label><select id="puesto_funcion" name="puesto_funcion" required style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #ccd4df;border-radius:9px;font-size:15px;background:#fff"><option value="">Selecciona una opción</option><option>Propietario(a) / dueño(a)</option><option>Socio(a)</option><option>Director(a) / gerente</option><option>Administrador(a)</option><option>Encargado(a)</option><option>Otro</option></select></div>
-<div style="margin-bottom:14px"><label for="email"><b>Correo electrónico</b></label><input type="email" id="email" name="email" autocomplete="email" placeholder="Escribe tu correo electrónico" required></div>
-<div style="margin-bottom:14px"><label for="telefono"><b>Teléfono</b></label><input type="tel" id="telefono" name="telefono" autocomplete="tel" placeholder="10 dígitos" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" required></div>
+<div id="emailField" style="margin-bottom:14px"><label for="email"><b>Correo electrónico *</b></label><input type="email" id="email" name="email" autocomplete="email" placeholder="Escribe tu correo electrónico" required><div class="field-error" id="emailError">Introduce un correo válido.</div></div>
+<div id="telefonoField" style="margin-bottom:14px"><label for="telefono"><b>Teléfono *</b></label><input type="tel" id="telefono" name="telefono" autocomplete="tel" placeholder="10 dígitos" inputmode="numeric" pattern="[0-9]{10}" minlength="10" maxlength="10" required><div class="field-error" id="telefonoError">Introduce un teléfono válido de 10 dígitos.</div></div>
 <h2>Perfil del negocio</h2>
 <fieldset data-question="q1" data-type="single">
 <legend>1. ¿Cuál es la principal actividad de tu negocio? *</legend><div class="meta">Tipo: selección única</div>
@@ -475,17 +475,32 @@ function values(name){return [...form.querySelectorAll(`input[name="${name}"]:ch
 function value(name){const el=form.querySelector(`input[name="${name}"]:checked`);if(el)return el.value;const field=form.querySelector(`[name="${name}"]`);return field?field.value.trim():""}
 function validate(){
   let ok=true;
-  const setBorder=(el,good)=>{if(!el)return;if(good)el.style.borderColor="";else{el.style.borderColor="#b42318";ok=false}};
+  const firstInvalid=[];
+  const setBorder=(el,good)=>{
+    if(!el)return;
+    if(good)el.style.borderColor="";
+    else{el.style.borderColor="#b42318";ok=false;firstInvalid.push(el)}
+  };
+  const setFieldState=(fieldId,inputId,errorId,good)=>{
+    const field=document.getElementById(fieldId),input=document.getElementById(inputId),error=document.getElementById(errorId);
+    if(!field||!input)return;
+    field.classList.toggle("field-invalid",!good);
+    input.setAttribute("aria-invalid",good?"false":"true");
+    if(error)error.style.display=good?"none":"block";
+    if(!good){ok=false;firstInvalid.push(input)}
+  };
+
   setBorder(document.getElementById("nombre_empresa"),!!document.getElementById("nombre_empresa").value.trim());
   setBorder(document.getElementById("nombre_respondente"),!!document.getElementById("nombre_respondente").value.trim());
   setBorder(document.getElementById("puesto_funcion"),!!document.getElementById("puesto_funcion").value);
 
   const email=document.getElementById("email");
   const telefono=document.getElementById("telefono");
-  const emailOk=!!email && email.validity.valid && !!email.value.trim();
+  const emailOk=!!email && !!email.value.trim() && email.validity.valid;
   const telefonoOk=!!telefono && /^\d{10}$/.test(telefono.value);
-  setBorder(email,emailOk);
-  setBorder(telefono,telefonoOk);
+
+  setFieldState("emailField","email","emailError",emailOk);
+  setFieldState("telefonoField","telefono","telefonoError",telefonoOk);
 
   form.querySelectorAll("fieldset").forEach(fs=>fs.classList.remove("invalid"));
   form.querySelectorAll("fieldset").forEach(fs=>{
@@ -494,10 +509,11 @@ function validate(){
     else if(type==="single")good=!!form.querySelector(`input[name="${q}"]:checked, select[name="${q}"]`)?.value;
     else if(type==="multi")good=form.querySelectorAll(`input[name="${q}"]:checked`).length>0;
     else if(type==="text")good=!!form.querySelector(`input[name="${q}"]`).value.trim();
-    if(!good){fs.classList.add("invalid");ok=false}
+    if(!good){fs.classList.add("invalid");ok=false;firstInvalid.push(fs)}
   });
-  if(consentimiento && !consentimiento.checked){ok=false}
-  return ok;
+  if(consentimiento && !consentimiento.checked){ok=false;firstInvalid.push(consentimiento)}
+
+  return {ok,firstInvalid};
 }
 function scoreKnowledge(v){return {"Casi nada":0,"He escuchado de ella, pero sé poco":20,"Conozco algunos conceptos y herramientas":40,"Sé utilizar algunas herramientas de IA":60,"Tengo buen conocimiento y conozco diferentes aplicaciones":80,"Conocimiento avanzado / especializado":100}[v]||0}
 function scoreAdoption(v){return {"No la usamos":0,"La hemos probado pero actualmente no":15,"La usamos ocasionalmente en algunas actividades":40,"La usamos regularmente en algunas actividades":70,"La IA ya forma parte de varias actividades":100}[v]||0}
@@ -553,13 +569,40 @@ if(consentimiento&&submitBtn){
 const codigoEmpresa=(()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"EMP-"+s})();
 function generarCodigoDiagnostico(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"DIA-"+new Date().getFullYear()+"-"+s}
 
-form.addEventListener("submit",async e=>{e.preventDefault();if(!validate()){document.querySelector(".invalid")?.scrollIntoView({behavior:"smooth",block:"center"});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.1",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent)});
+form.addEventListener("submit",async e=>{e.preventDefault();const validation=validate();if(!validation.ok){const target=validation.firstInvalid[0];target?.scrollIntoView({behavior:"smooth",block:"center"});if(target?.focus)target.focus({preventScroll:true});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.2",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent)});
 document.getElementById("resetBtn").addEventListener("click",()=>{if(confirm("¿Limpiar todas las respuestas?"))location.reload()});renderQ2();
 
+function validateEmailLive(){
+  const input=document.getElementById("email"),field=document.getElementById("emailField"),error=document.getElementById("emailError");
+  if(!input||!field)return;
+  const empty=!input.value.trim();
+  const good=!empty&&input.validity.valid;
+  const show=!empty;
+  field.classList.toggle("field-invalid",show&&!good);
+  input.setAttribute("aria-invalid",(show&&!good)?"true":"false");
+  if(error)error.style.display=(show&&!good)?"block":"none";
+}
+function validateTelefonoLive(){
+  const input=document.getElementById("telefono"),field=document.getElementById("telefonoField"),error=document.getElementById("telefonoError");
+  if(!input||!field)return;
+  const empty=!input.value.trim();
+  const good=/^\d{10}$/.test(input.value);
+  const show=!empty;
+  field.classList.toggle("field-invalid",show&&!good);
+  input.setAttribute("aria-invalid",(show&&!good)?"true":"false");
+  if(error)error.style.display=(show&&!good)?"block":"none";
+}
+const emailInput=document.getElementById("email");
+if(emailInput){
+  emailInput.addEventListener("input",validateEmailLive);
+  emailInput.addEventListener("blur",validateEmailLive);
+}
 const telefonoInput=document.getElementById("telefono");
 if(telefonoInput){
   telefonoInput.addEventListener("input",()=>{
     telefonoInput.value=telefonoInput.value.replace(/\D/g,"").slice(0,10);
+    validateTelefonoLive();
   });
+  telefonoInput.addEventListener("blur",validateTelefonoLive);
 }
 </script></body></html>
