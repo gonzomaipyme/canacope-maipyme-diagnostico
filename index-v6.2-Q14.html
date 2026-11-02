@@ -17,7 +17,11 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 .error{display:none;color:#b42318;font-size:13px;margin-top:7px}.invalid .error{display:block}.counter{font-size:12px;color:#687585;margin-top:6px}.field-error{display:none;color:#b42318;font-size:13px;margin-top:7px}.field-invalid .field-error{display:block}.field-invalid input,.field-invalid select{border-color:#b42318!important;background:#fff7f7}
 .result{display:none}.metricgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.metric{background:#f6f8fb;border-radius:10px;padding:12px;text-align:center}.metric b{display:block;font-size:22px}
 .route{font-size:22px;font-weight:800;margin-bottom:8px}pre{white-space:pre-wrap;word-break:break-word;background:#101828;color:#eef2f6;padding:14px;border-radius:10px;max-height:340px;overflow:auto;font-size:12px}
-.small{font-size:12px;color:#667085}@media(max-width:700px){.metricgrid{grid-template-columns:repeat(2,1fr)}}
+.small{font-size:12px;color:#667085}
+.brandbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:18px;margin-bottom:16px;border-bottom:1px solid #e7ebf0}
+.brand-canacope{width:78px;height:78px;object-fit:contain}
+.brand-maipyme{width:250px;max-width:62%;height:auto;object-fit:contain}
+@media(max-width:700px){.metricgrid{grid-template-columns:repeat(2,1fr)}.brand-canacope{width:62px;height:62px}.brand-maipyme{width:200px;max-width:72%}}
 
 .ai-logic-modal{
   position:fixed;
@@ -56,10 +60,15 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
   font-size:15px;
 }
 </style></head><body><div class="wrap">
-<header><h1>CANACOPE · mAIpyme</h1><p class="subtitle">Prototipo de diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
+<header>
+<div class="brandbar">
+  <img class="brand-canacope" src="./CANACOPE-logo.png" alt="CANACOPE Ciudad de México">
+  <img class="brand-maipyme" src="./MAIPYME-logo.png" alt="mAIpyme">
+</div>
+<h1>Diagnóstico CANACOPE · mAIpyme</h1><p class="subtitle">Diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
 <div class="notice"><b>Duración:</b> aproximadamente 10 minutos.<br><b>Quién responde:</b> preferentemente dueño, socio, director o gerente general.<br>
 <b>Modo piloto:</b> calcula el Índice CANACOPE y una ruta provisional. Si se configura una URL de Google Apps Script, también guarda el registro en Google Sheets.</div></header>
-<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.2" novalidate>
+<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.8" novalidate>
 <section><h2>Datos de identificación</h2>
 <div class="notice" style="margin-bottom:14px">Estos datos se utilizan para identificar el diagnóstico y dar seguimiento. <b>No forman parte del Índice CANACOPE ni de la clasificación de la ruta.</b></div>
 <div style="margin-bottom:14px"><label for="nombre_empresa"><b>Nombre de la empresa *</b></label><input type="text" id="nombre_empresa" name="nombre_empresa" required placeholder="Escribe el nombre de la empresa"></div>
@@ -556,7 +565,7 @@ if(aiLogicModalDismiss){
 }
 
 function getLogicAutocompleted(){return Object.entries(aiLogicAutocompleted).filter(([,wasAuto])=>wasAuto).map(([q])=>{const v=q==="q16"?"Nunca":"No utilizamos IA";return `${q}=${v} (por Q14=No la usamos)`})}
-function showResult(sent){document.getElementById("result").style.display="block";document.getElementById("saveStatus").textContent=sent?"Tu diagnóstico fue recibido correctamente.":"No pudimos confirmar el envío. Si no recibes tu análisis, por favor vuelve a intentarlo.";document.getElementById("result").scrollIntoView({behavior:"smooth"})}
+function showResult(sent,codigoDiagnostico){document.getElementById("result").style.display="block";document.getElementById("saveStatus").textContent=sent?"Tu diagnóstico fue recibido correctamente.":"No pudimos confirmar el envío. Si no recibes tu análisis, por favor vuelve a intentarlo.";if(sent&&codigoDiagnostico){const link=document.getElementById("downloadReportLink");link.href=APPS_SCRIPT_URL+"?pdf="+encodeURIComponent(codigoDiagnostico);link.target="_blank";link.rel="noopener";link.onclick=null;}document.getElementById("result").scrollIntoView({behavior:"smooth"})}
 function sendToAppsScript(payload){if(!APPS_SCRIPT_URL)return Promise.resolve(null);return fetch(APPS_SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)}).then(()=>true).catch(()=>false)}
 const consentimiento=document.getElementById("consentimiento");
 const submitBtn=document.getElementById("submitBtn");
@@ -569,7 +578,7 @@ if(consentimiento&&submitBtn){
 const codigoEmpresa=(()=>{const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"EMP-"+s})();
 function generarCodigoDiagnostico(){const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return"DIA-"+new Date().getFullYear()+"-"+s}
 
-form.addEventListener("submit",async e=>{e.preventDefault();const validation=validate();if(!validation.ok){const target=validation.firstInvalid[0];target?.scrollIntoView({behavior:"smooth",block:"center"});if(target?.focus)target.focus({preventScroll:true});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.2",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent)});
+form.addEventListener("submit",async e=>{e.preventDefault();const validation=validate();if(!validation.ok){const target=validation.firstInvalid[0];target?.scrollIntoView({behavior:"smooth",block:"center"});if(target?.focus)target.focus({preventScroll:true});return}const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.8",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada},sent=await sendToAppsScript(payload);showResult(sent,codigoDiagnostico)});
 document.getElementById("resetBtn").addEventListener("click",()=>{if(confirm("¿Limpiar todas las respuestas?"))location.reload()});renderQ2();
 
 function validateEmailLive(){
