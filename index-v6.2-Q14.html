@@ -60,7 +60,7 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
   font-size:15px;
 }
 
-/* v6.3.9 — Modal de procesamiento y confirmación */
+/* v6.3.10 — Modal de procesamiento y confirmación */
 #processingModal{position:fixed;inset:0;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:99999}
 #processingModal.active{display:flex}
 .processing-card{width:min(560px,100%);background:#fff;border-radius:18px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;max-height:90vh;overflow:auto}
@@ -71,6 +71,9 @@ button{border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:poin
 .processing-card .modal-retry{display:inline-block;margin-top:18px;padding:12px 20px;border-radius:10px;border:0;background:#1f6feb;color:#fff;font-weight:700;cursor:pointer}
 body.modal-open{overflow:hidden}
 
+
+.text-field{width:100%;box-sizing:border-box;padding:14px 15px;border:1px solid #ccd4df;border-radius:10px;font-size:16px;background:#fff;color:#172033;outline:none}
+.text-field:focus{border-color:#0b78ff;box-shadow:0 0 0 3px rgba(11,120,255,.12)}
 </style></head><body><div class="wrap">
 <header>
 <div class="brandbar">
@@ -80,7 +83,7 @@ body.modal-open{overflow:hidden}
 <h1>Diagnóstico CANACOPE · mAIpyme</h1><p class="subtitle">Diagnóstico de adopción y preparación frente a la Inteligencia Artificial</p>
 <div class="notice"><b>Duración:</b> aproximadamente 10 minutos.<br><b>Quién responde:</b> preferentemente dueño, socio, director o gerente general.<br>
 <b>Modo piloto:</b> calcula el Índice CANACOPE y una ruta provisional. Si se configura una URL de Google Apps Script, también guarda el registro en Google Sheets.</div></header>
-<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.9" novalidate>
+<form id="diagnostico" data-form-id="canacope-maipyme-diagnostico-v6.3.10" novalidate>
 <section><h2>Datos de identificación</h2>
 <div class="notice" style="margin-bottom:14px">Estos datos se utilizan para identificar el diagnóstico y dar seguimiento. <b>No forman parte del Índice CANACOPE ni de la clasificación de la ruta.</b></div>
 <div style="margin-bottom:14px"><label for="nombre_empresa"><b>Nombre de la empresa *</b></label><input type="text" id="nombre_empresa" name="nombre_empresa" required placeholder="Escribe el nombre de la empresa"></div>
@@ -482,7 +485,12 @@ const TAXONOMY = {"Comercio":["Alimentos y abarrotes","Ropa, calzado y accesorio
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVSrHW6RM_QG5u62KK52ed6Ukxd8Ipm3CtghMDd7OXFdVRqD1ZVHGfJbTzQXcKlGu4/exec";
 
 const form=document.getElementById("diagnostico"),q2Options=document.getElementById("q2-options"),q2Value=document.getElementById("q2-value");
-function renderQ2(){const giro=document.querySelector('input[name="q1"]:checked')?.value;q2Options.innerHTML="";q2Value.value="";if(!giro||!TAXONOMY[giro])return;TAXONOMY[giro].forEach(o=>{const l=document.createElement("label");l.className="option";l.innerHTML='<input type="radio" name="q2_option" value="'+o.replace(/"/g,"&quot;")+'">'+o;q2Options.appendChild(l)});q2Options.querySelectorAll('input[name="q2_option"]').forEach(r=>r.addEventListener("change",()=>q2Value.value=r.value))}
+function renderQ2(){const giro=document.querySelector('input[name="q1"]:checked')?.value;q2Options.innerHTML="";q2Value.value="";if(!giro)return;
+if(giro==="Otro"){q2Options.innerHTML='<div class="meta" style="margin-bottom:8px">Especifica brevemente cuál es la actividad principal de tu negocio.</div><input type="text" id="q2-other-text" class="text-field" placeholder="Ej. Servicios de diseño de interiores" maxlength="120" autocomplete="off" required>';
+const input=document.getElementById("q2-other-text");input.addEventListener("input",()=>{q2Value.value=input.value.trim()?("Otro: "+input.value.trim()):""});return}
+if(!TAXONOMY[giro])return;
+TAXONOMY[giro].forEach(o=>{const l=document.createElement("label");l.className="option";l.innerHTML='<input type="radio" name="q2_option" value="'+o.replace(/"/g,"&quot;")+'">'+o;q2Options.appendChild(l)});
+q2Options.querySelectorAll('input[name="q2_option"]').forEach(r=>r.addEventListener("change",()=>{if(r.value==="Otro"){q2Options.innerHTML='<div class="meta" style="margin-bottom:8px">Especifica brevemente cuál es la subcategoría de tu actividad.</div><input type="text" id="q2-other-text" class="text-field" placeholder="Especifica tu actividad" maxlength="120" autocomplete="off" required>';const input=document.getElementById("q2-other-text");input.addEventListener("input",()=>{q2Value.value=input.value.trim()?("Otro: "+input.value.trim()):""})}else{q2Value.value=r.value}}))}
 document.querySelectorAll('input[name="q1"]').forEach(i=>i.addEventListener("change",renderQ2));
 document.querySelectorAll('fieldset[data-type="multi"]').forEach(fs=>{const max=Number(fs.dataset.maxSelections||99),inputs=fs.querySelectorAll('input[type="checkbox"]'),counter=fs.querySelector(".counter");const update=()=>{const checked=[...inputs].filter(i=>i.checked);if(checked.length>max)checked[checked.length-1].checked=false;const n=[...inputs].filter(i=>i.checked).length;if(counter)counter.textContent=`Seleccionadas: ${n} / ${max}`};inputs.forEach(i=>i.addEventListener("change",update));update()});
 const aiLogicAutocompleted={q15:false,q16:false,q17:false,q18:false,q20:false};
@@ -608,7 +616,7 @@ form.addEventListener("submit",async e=>{
   openProcessingModal();
   submitBtn.disabled=true;
   submitBtn.textContent="⏳ Procesando tu diagnóstico…";
-  const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.9",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada};
+  const responses=collect(),calc=calculate(responses),logicAutocompletada=getLogicAutocompleted(),codigoDiagnostico=generarCodigoDiagnostico(),payload={codigo_empresa:codigoEmpresa,codigo_diagnostico:codigoDiagnostico,timestamp:new Date().toISOString(),form_version:"canacope-maipyme-diagnostico-v6.3.10",identification:{nombre_empresa:document.getElementById("nombre_empresa").value.trim(),nombre_respondente:document.getElementById("nombre_respondente").value.trim(),puesto_funcion:document.getElementById("puesto_funcion").value,email:document.getElementById("email").value.trim(),telefono:document.getElementById("telefono").value.trim()},responses,calculated:calc,logic_autocompletada:logicAutocompletada};
   const sent=await sendToAppsScript(payload);
   showResult(sent,codigoDiagnostico);
 });
@@ -648,7 +656,7 @@ if(telefonoInput){
   telefonoInput.addEventListener("blur",validateTelefonoLive);
 }
 </script>
-<!-- v6.3.9 — Modal de procesamiento -->
+<!-- v6.3.10 — Modal de procesamiento -->
 <div id="processingModal" aria-hidden="true">
   <div class="processing-card" role="dialog" aria-modal="true" aria-labelledby="processingTitle">
     <div id="processingLoading">
